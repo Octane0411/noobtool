@@ -1,0 +1,5 @@
+Email:
+  ServerHost: smtp.qq.com
+  ServerPort: 465
+  FromEmail: octane0411@qq.com
+  FromPasswd: qrprjarssmfacjfi
