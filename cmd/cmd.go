@@ -11,4 +11,5 @@ func Execute() error {
 func init() {
 	rootCmd.AddCommand(envsCmd)
 	rootCmd.AddCommand(emailCmd)
+	rootCmd.AddCommand(treeCmd)
 }
