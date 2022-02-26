@@ -12,4 +12,5 @@ func init() {
 	rootCmd.AddCommand(envsCmd)
 	rootCmd.AddCommand(emailCmd)
 	rootCmd.AddCommand(treeCmd)
+	rootCmd.AddCommand(ipgwCmd)
 }
