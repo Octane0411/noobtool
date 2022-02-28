@@ -17,10 +17,13 @@ func init() {
 }
 
 var emailCmd = &cobra.Command{
-	Use: "email",
+	Use:   "email",
 	Short: "管理自己的邮件",
 	Long:  "...",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(subject) == 0 && len(body) == 0 {
+			log.Fatal("邮件标题和内容不能同时为空")
+		}
 		err := email.SendEmail(toers, ccers, subject, body)
 		if err != nil {
 			log.Fatalf("sendEmail err: %v", err)
@@ -28,6 +31,3 @@ var emailCmd = &cobra.Command{
 		fmt.Println("发送成功！")
 	},
 }
-
-
-

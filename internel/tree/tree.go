@@ -34,7 +34,7 @@ func walkDir(dir string, n *sync.WaitGroup, fileSizes chan<- int64) {
 	}
 }
 
-func treeDir(root *DirNode, n *sync.WaitGroup) {
+func treeDir(root *DirNode, n *sync.WaitGroup, fileSizes chan<- int64, dirCount chan<- struct{}) {
 	defer n.Done()
 	//TODO 将自动略过.git替换成可设置项
 	/*	if root.name == ".git" {
@@ -48,11 +48,13 @@ func treeDir(root *DirNode, n *sync.WaitGroup) {
 		if entry.IsDir() {
 			sub := &DirNode{name: entry.Name(), rname: filepath.Join(root.rname, entry.Name())}
 			root.cDirs = append(root.cDirs, sub)
+			dirCount <- struct{}{}
 			n.Add(1)
-			go treeDir(sub, n)
+			go treeDir(sub, n, fileSizes, dirCount)
 		} else {
 			f := &FileNode{entry.Name()}
 			root.cFiles = append(root.cFiles, f)
+			fileSizes <- entry.Size()
 		}
 	}
 }
@@ -69,7 +71,7 @@ func dirents(dir string) []os.FileInfo {
 
 	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
-		log.Printf("dir error: %v", err)
+		log.Fatalf("dir error: %v", err)
 		return nil
 	}
 	return entries
@@ -110,7 +112,36 @@ func PrintTree(dir string) {
 	}
 	var n sync.WaitGroup
 	n.Add(1)
-	treeDir(root, &n)
-	n.Wait()
+	fileSizes := make(chan int64)
+	dirCount := make(chan struct{})
+	go treeDir(root, &n, fileSizes, dirCount)
+	go func() {
+		n.Wait()
+		close(fileSizes)
+		close(dirCount)
+	}()
+	var ndirs, nfiles, nbytes int64
+loop:
+	for {
+		select {
+		case size, ok := <-fileSizes:
+			if !ok {
+				break loop
+			}
+			nfiles++
+			nbytes += size
+		case _, ok := <-dirCount:
+			if !ok {
+				break loop
+			}
+			ndirs++
+		}
+	}
 	root.print(0)
+	printDiskUsage(ndirs, nfiles, nbytes)
+
+}
+
+func printDiskUsage(ndirs, nfiles, nbytes int64) {
+	fmt.Printf("%d directories, %d files, %.1f MB total\n", ndirs, nfiles, float64(nbytes)/1e6)
 }
