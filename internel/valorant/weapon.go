@@ -56,19 +56,18 @@ func GetWeapons() {
 	}
 	resp, err := c.Do(req)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("request error: %v", err)
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalf("Read Body err: %v", err)
 	}
 	b := &respBody{}
 	err = json.Unmarshal(body, &b)
+	//log.Println(string(body))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("json parse error: %v", err)
 	}
-	log.Println(string(body))
-	log.Printf("%v", b.Weaponskins.W1.Name)
 	weapon := b.Weaponskins
 
 	t, err := template.New("weapon").Parse("hi there,\nyour weapons today:\n" +
